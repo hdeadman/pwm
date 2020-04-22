@@ -17,6 +17,7 @@
 
     <properties>
         <skipDocker>false</skipDocker>
+        <skipDockerPublish>true</skipDockerPublish>
     </properties>
 
     <profiles>
@@ -34,6 +35,46 @@
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
                 <version>2.1.0</version>
+                <configuration>
+                    <skip>${skipDocker}</skip>
+                    <from>
+                        <image>adoptopenjdk/openjdk11:jre</image>
+                    </from>
+                    <to>
+                        <image>${dockerImageTag}</image>
+                    </to>
+                    <outputPaths>
+                        <tar>target/pwm-docker-image-${project.version}.tar</tar>
+                    </outputPaths>
+                    <container>
+                        <creationTime>${git.commit.time}</creationTime>
+                        <filesModificationTime>${git.commit.time}</filesModificationTime>
+                        <entrypoint>
+                            <arg>/app/startup.sh</arg>
+                        </entrypoint>
+                        <ports>
+                            <port>8443</port>
+                        </ports>
+                        <volumes>
+                            <volume>/config</volume>
+                        </volumes>
+                    </container>
+                    <extraDirectories>
+                        <paths>
+                            <path>${project.basedir}/src/main/image-files</path>
+                        </paths>
+                        <permissions>
+                            <permission>
+                                <file>/app/startup.sh</file>
+                                <mode>755</mode>
+                            </permission>
+                            <permission>
+                                <file>/app/command.sh</file>
+                                <mode>755</mode>
+                            </permission>
+                        </permissions>
+                    </extraDirectories>
+                </configuration>
                 <executions>
                     <execution>
                         <id>make-docker-image</id>
@@ -43,43 +84,16 @@
                         </goals>
                         <configuration>
                             <skip>${skipDocker}</skip>
-                            <from>
-                                <image>adoptopenjdk/openjdk11:jre</image>
-                            </from>
-                            <to>
-                                <image>${dockerImageTag}</image>
-                            </to>
-                            <outputPaths>
-                                <tar>target/pwm-docker-image-${project.version}.tar</tar>
-                            </outputPaths>
-                            <container>
-                                <creationTime>${git.commit.time}</creationTime>
-                                <filesModificationTime>${git.commit.time}</filesModificationTime>
-                                <entrypoint>
-                                    <arg>/app/startup.sh</arg>
-                                </entrypoint>
-                                <ports>
-                                    <port>8443</port>
-                                </ports>
-                                <volumes>
-                                    <volume>/config</volume>
-                                </volumes>
-                            </container>
-                            <extraDirectories>
-                                <paths>
-                                    <path>${project.basedir}/src/main/image-files</path>
-                                </paths>
-                                <permissions>
-                                    <permission>
-                                        <file>/app/startup.sh</file>
-                                        <mode>755</mode>
-                                    </permission>
-                                    <permission>
-                                        <file>/app/command.sh</file>
-                                        <mode>755</mode>
-                                    </permission>
-                                </permissions>
-                            </extraDirectories>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>publish-image</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipDockerPublish}</skip>
                         </configuration>
                     </execution>
                 </executions>
